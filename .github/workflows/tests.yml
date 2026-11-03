@@ -38,11 +38,13 @@ jobs:
 
       # These download the release tarball and zip, so they only work once a tagged
       # release exists and the placeholders have been replaced.
-      - name: brew audit (online, new)
+      # Not --new: that adds homebrew-core's notability rules (stars/forks), which
+      # don't apply to a personal tap.
+      - name: brew audit (online)
         if: steps.placeholder.outputs.present == 'false'
         run: |
-          brew audit --strict --new --online --formula schlunsen/vogter/vogter
-          brew audit --strict --new --online --cask schlunsen/vogter/vogter
+          brew audit --strict --online --formula schlunsen/vogter/vogter
+          brew audit --strict --online --cask schlunsen/vogter/vogter
 
       - name: Build and test the formula from source
         if: steps.placeholder.outputs.present == 'false'
