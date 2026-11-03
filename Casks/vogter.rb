@@ -5,7 +5,7 @@ cask "vogter" do
 
   url "https://github.com/schlunsen/vogter/releases/download/v#{version}/Vogter-#{version}-macos-arm64.zip"
   name "Vogter"
-  desc "Menu bar app that watches your Mac for malware, keyloggers and spying"
+  desc "Menu bar app that watches for malware, keyloggers and spying"
   homepage "https://github.com/schlunsen/vogter"
 
   livecheck do
@@ -14,10 +14,10 @@ cask "vogter" do
   end
 
   depends_on arch: :arm64
-  depends_on macos: ">= :sonoma"
   # The app is a front end for the vogterd service, which the formula provides
   # (`brew services start vogter`).
   depends_on formula: "schlunsen/vogter/vogter"
+  depends_on macos: :sonoma
 
   app "Vogter.app"
 
