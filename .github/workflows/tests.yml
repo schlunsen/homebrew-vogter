@@ -1,0 +1,51 @@
+name: brew audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: macos-15
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Check for placeholder checksums
+        id: placeholder
+        run: |
+          tap="$(brew --repository schlunsen/vogter)"
+          if grep -q 'sha256 "0\{64\}"' "$tap/Formula/vogter.rb" "$tap/Casks/vogter.rb"; then
+            echo "::warning::sha256 placeholders present; skipping online audit and source build"
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: brew style
+        run: brew style schlunsen/vogter
+
+      - name: brew audit (offline, strict)
+        run: |
+          brew audit --strict --formula schlunsen/vogter/vogter
+          brew audit --strict --cask schlunsen/vogter/vogter
+
+      # These download the release tarball and zip, so they only work once a tagged
+      # release exists and the placeholders have been replaced.
+      - name: brew audit (online, new)
+        if: steps.placeholder.outputs.present == 'false'
+        run: |
+          brew audit --strict --new --online --formula schlunsen/vogter/vogter
+          brew audit --strict --new --online --cask schlunsen/vogter/vogter
+
+      - name: Build and test the formula from source
+        if: steps.placeholder.outputs.present == 'false'
+        run: |
+          brew install --build-from-source schlunsen/vogter/vogter
+          brew test schlunsen/vogter/vogter
